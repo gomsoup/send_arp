@@ -26,7 +26,7 @@ int main(int argc, char *argv[]){
 	ifr.ifr_addr.sa_family = AF_INET;
 	strncpy(ifr.ifr_name, argv[1], sizeof(ifr.ifr_name));
 
-	if (ioctl(fd, SIOCGIFHWADDR, &ifr == 0 && fd != -1)){
+	if ((ioctl(fd, SIOCGIFHWADDR, &ifr) == 0) && fd != -1){
 		memcpy(mac, ifr.ifr_hwaddr.sa_data, ETH_ALEN);
 		printf("MAC Device : %s\n", argv[1]);
 		printf("Mac : %.2X:%.2X:%.2X:%.2X:%.2X:%.2X\n" , mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
