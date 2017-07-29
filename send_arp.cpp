@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
 	struct ifreq ifr;
 	u_int8_t mac[ETH_ALEN];
 	u_int8_t target_mac[ETH_ALEN] = {0x00, };
-	u_int8_t broadcast[ETH_ALEN] = {0x00, };
+	u_int8_t broadcast[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 	memset(&ifr, 0, sizeof(ifr));
 	int fd = socket(AF_INET, SOCK_DGRAM, 0);
@@ -144,6 +144,8 @@ int main(int argc, char *argv[]){
 		printf("Seems like filter dosen't work\n");
 		exit(1);
 	}
+	else
+		printf("Ether type : ARP");
 
 
 
