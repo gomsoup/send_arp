@@ -99,9 +99,7 @@ int main(int argc, char *argv[]){
 	}
 
 	// Send packet
-
-
-
+	pcap_sendpacket(p, packet, ETHER_HEAD_LEN + ARP_LEN)
 
 	return 0;
 }
