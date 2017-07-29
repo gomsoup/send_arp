@@ -90,16 +90,16 @@ int main(int argc, char *argv[]){
 	memcpy(packet + ETHER_HEAD_LEN, &arp, ARP_LEN);
 
 	// Ready device
-	p = pcap_open_live(argv[1], 1024, 0, 0, errbuf);
-
-	if(errbuf[0] == '\0'){
-		printf("pcap_open_live failed\n");
-		printf("%s", errbuf);
+	p = pcap_open_live(argv[1], 94, 0, 10, errbuf);
+=
+	if (p == NULL){
+		printf("pcap_open_live returned null. device ready failed\n");
+		printf("errbuf : %s\n", errbuf);
 		exit(1);
 	}
 
 	// Send packet
-	pcap_sendpacket(p, packet, ETHER_HEAD_LEN + ARP_LEN)
+	pcap_sendpacket(p, packet, sizeof(packet));
 
 	return 0;
 }
