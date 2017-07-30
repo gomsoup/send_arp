@@ -50,7 +50,7 @@ int main(int argc, char *argv[]){
 		coded by https://stackoverflow.com/questions/1779715/how-to-get-mac-address-of-your-machine-using-a-c-program */
 	struct ifreq ifr;
 	u_int8_t mac[ETH_ALEN];
-	u_int8_t target_mac[ETH_ALEN] = {0x00, };
+	u_int8_t target_mac[ETH_ALEN] = {0x00, }; // for inet_ntop
 	u_int8_t broadcast[ETH_ALEN] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 	memset(&ifr, 0, sizeof(ifr));
@@ -76,11 +76,6 @@ int main(int argc, char *argv[]){
 	header.ether_type = htons(ETHERTYPE_ARP);
 
 	// Initialize ARP protocol
-	arp.arp_hrd = htons(0x1);
-	arp.arp_pro = htons(0x0800);
-	arp.arp_hln = ETH_ALEN; // 1byte
-	arp.arp_pln = IP_SIZE;
-	arp.arp_op = htons(0x1); // request
 	memcpy(arp.arp_sha, mac, ETH_ALEN);
 	memcpy(arp.arp_spa, &sender_ip.sin_addr, IP_SIZE); // sender -> boradcast
 	memcpy(arp.arp_tha, broadcast, ETH_ALEN);
@@ -92,7 +87,7 @@ int main(int argc, char *argv[]){
 	memcpy(packet + ETHER_HEAD_LEN, &arp, ARP_LEN);
 
 	// Ready device to request arp
-	p = pcap_open_live(argv[1], 94, 0, 10, errbuf);
+	p = pcap_open_live(argv[1], 94, 0, 100, errbuf);
 
 	if (p == NULL){
 		printf("pcap_open_live returned null. device ready failed\n");
@@ -107,17 +102,19 @@ int main(int argc, char *argv[]){
 	}
 	else
 		printf("ARP requset sended\n");
-	
+
 	/* I tried dynamic cast such as in_addr to bpf_u_int32 didn't work. 
 	   So we'll use pcap_lookupnet to get net, mask. 
 	   If you have a better idea than mine, Feel free and just tell me your thought. */   
 
 	bpf_u_int32 net, mask;
 	struct pcap_pkthdr *recv_header;
-	u_char recv_packet[ETHER_HEAD_LEN + ARP_LEN];
+	u_int8_t *recv_packet;
+	struct ether_header *recv_ether;
+	struct ether_arp *recv_arp;
 
 	//lookup device
-	if(pcap_lookupnet(argv[1], &net, &mask, errbuf) == -1){
+	if( pcap_lookupnet(argv[1], &net, &mask, errbuf) == -1){
 		printf("pcap_lookupnet failed\n");
 		printf("errvbuf : %s\n", errbuf);
 	}
@@ -133,20 +130,35 @@ int main(int argc, char *argv[]){
 	}
 
 	// Recv reply data
-	if(pcap_next_ex(p, &recv_header, &recv_packet) != 0){
-		printf("pcap_next_ex failed\n");
+	if(pcap_next_ex(p, &recv_header, (const u_char **)&recv_packet) != 1){
+		printf("pcap_next_ex failed\n");	
 		exit(1);
 	}
 	else
 		printf("ARP reply data arrived\n");
 
-	if (( ((struct ehter_header *)recv_packet)->ether_type) != ETHERTYPE_ARP ) {
-		printf("Seems like filter dosen't work\n");
+
+	// Initialize Recv data
+	recv_ether = (struct ether_header *)recv_packet;
+	recv_arp = (struct ether_arp *)(recv_packet + ETHER_HEAD_LEN);
+	memcpy(target_mac, &recv_arp->arp_sha, ETH_ALEN);
+
+
+	if ( ntohs(recv_ether->ether_type) != ETHERTYPE_ARP ) {
+		printf("Seems like filter dosen't work. Terminating...\n");
 		exit(1);
 	}
 	else
-		printf("Ether type : ARP");
+		printf("Ether type : ARP\n");
+	
+	if ( ntohs(recv_arp->arp_op) != 0x2 ){
+		printf("Seems like not ARP reply packet. Terminating...\n");
+		exit(1);
+	}
+	else
+		printf("Op code : 0x2 (reply)\n");
 
+	printf("Target MAC : %x:%x:%x:%x:%x:%x\n", target_mac[0], target_mac[1], target_mac[2], target_mac[3], target_mac[4], target_mac[5]);
 
 
 	return 0;
