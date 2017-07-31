@@ -35,8 +35,8 @@ int main(int argc, char *argv[]){
 
 	arp.arp_hrd = htons(ARPHRD_ETHER);
 	arp.arp_pro = htons(ETH_P_IP);
-	arp.arp_hln=ETHER_ADDR_LEN;
-	arp.arp_pln=sizeof(in_addr_t);
+	arp.arp_hln = ETHER_ADDR_LEN;
+	arp.arp_pln = sizeof(in_addr_t);
 	arp.arp_op = htons(ARPOP_REQUEST);
 	inet_aton(argv[2], &sender_ip.sin_addr);
 	inet_aton(argv[3], &target_ip.sin_addr);
@@ -77,9 +77,9 @@ int main(int argc, char *argv[]){
 
 	// Initialize ARP protocol
 	memcpy(arp.arp_sha, mac, ETH_ALEN);
-	memcpy(arp.arp_spa, &sender_ip.sin_addr, IP_SIZE); // sender -> boradcast
+	memcpy(arp.arp_spa, &target_ip.sin_addr, IP_SIZE); // sender -> boradcast
 	memcpy(arp.arp_tha, broadcast, ETH_ALEN);
-	memcpy(arp.arp_tpa, &target_ip.sin_addr, IP_SIZE);
+	memcpy(arp.arp_tpa, &sender_ip.sin_addr, IP_SIZE);
 
 
 	// Initialize packet
