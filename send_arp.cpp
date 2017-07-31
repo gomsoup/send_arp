@@ -158,6 +158,13 @@ int main(int argc, char *argv[]){
 	else
 		printf("Op code : 0x2 (reply)\n");
 
+	if ( (recv_arp->arp_tpa) != (arp.arp_spa) ){
+		printf("Seems like not our reply packet.  Terminating...\n");
+		exit(1);
+	}
+	else
+		printf("YEAH!! THIS IS OUR ARP PACKET!!!!\n");
+
 	printf("Target MAC : %x:%x:%x:%x:%x:%x\n", target_mac[0], target_mac[1], target_mac[2], target_mac[3], target_mac[4], target_mac[5]);
 
 
